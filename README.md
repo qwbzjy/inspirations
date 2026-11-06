@@ -1,0 +1,123 @@
+# 灵感 (Inspirations)
+
+flomo 风格灵感速记 App — 想到什么，随手记下来。支持 `#标签` 语法、图片附件、语音转文字与本地备份，数据全部保存在设备本地。
+
+## 功能特性
+
+### 快速记录
+- 顶部速记卡片，输入即记，支持多行文本
+- 语音速记：实时语音转文字（中文），说完自动填入输入框
+- 图片附件：每条灵感可附带多张图片，按添加顺序排列，点击全屏查看
+
+### flomo 式 #标签
+- 在正文中输入 `#标签` 即可自动创建/关联标签
+- 支持层级标签：`#读书/笔记/摘抄`
+- 标签支持重命名（子树整体改名）、删除、自定义颜色
+- 自动清理无引用的孤立标签
+
+### 浏览与检索
+- 按日期分组展示：今天 / 昨天 / M月d日 周X（跨年自动带年份）
+- 侧边栏标签树导航
+- 内置搜索
+
+### 数据安全
+- 本地备份导出 / 导入（JSON 格式，含图片）
+- 导入支持两种模式：合并（保留现有数据）/ 替换（清空后导入）
+- 统计面板：备忘条数、标签数等
+
+### 其他
+- 触感反馈、轻量 Toast 提示
+- 适配 iPhone（竖屏）与 iPad（全方向）
+
+## 技术栈与系统要求
+
+| 项目 | 说明 |
+|------|------|
+| UI 框架 | SwiftUI |
+| 数据库 | SwiftData（模型：Memo / Tag / ImageAsset） |
+| 系统要求 | iOS 17.0 及以上 |
+| 开发工具 | Xcode 15+，XcodeGen 2.46（已内置在 `.tools/` 中） |
+| 外部依赖 | 无（全部使用系统框架） |
+
+## 项目结构
+
+```
+Inspirations/
+├── App/
+│   ├── InspirationsApp.swift    # App 入口，初始化 SwiftData 容器
+│   └── Theme.swift              # 主题/配色
+├── Models/
+│   ├── Memo.swift               # 灵感条目（内容、时间、图片、标签）
+│   ├── Tag.swift                # 标签（路径 path 唯一）
+│   └── ImageAsset.swift         # 图片附件（按 order 排序）
+├── ViewModels/
+│   └── ComposeViewModel.swift   # 速记输入状态
+├── Views/
+│   ├── HomeView.swift           # 主界面（侧边栏 + 列表）
+│   ├── SidebarView.swift        # 标签树侧边栏
+│   ├── MemoListView.swift       # 备忘列表（含搜索）
+│   ├── MemoRowView.swift        # 列表行
+│   ├── MemoDetailView.swift     # 详情/编辑
+│   ├── ComposeCardView.swift    # 顶部速记卡片
+│   ├── TagManagementView.swift  # 标签管理（改名/删除/配色）
+│   ├── SettingsView.swift       # 设置（统计/备份）
+│   ├── ImageViewerView.swift    # 图片全屏查看
+│   ├── EmptyStateView.swift     # 空状态
+│   └── Toast.swift              # Toast 提示
+├── Services/
+│   ├── MemoStore.swift          # 数据层：增删改查、标签同步与重命名
+│   ├── TagParser.swift          # #标签 解析与内容重写
+│   ├── SpeechRecognizer.swift   # 语音转文字（SFSpeechRecognizer）
+│   ├── ImageStore.swift         # 图片文件存储
+│   ├── BackupService.swift      # 备份导出/导入（JSON + CryptoKit 校验）
+│   └── Haptics.swift            # 触感反馈
+└── Support/
+    ├── TagTree.swift            # 标签树构建
+    ├── DateGrouper.swift        # 日期分组
+    └── Extensions.swift         # 通用扩展
+```
+
+- `project.yml` — XcodeGen 工程定义
+- `regen.sh` — 重新生成 `.xcodeproj` 的脚本
+
+## 构建与运行
+
+1. 修改源码（新增/删除文件）后，先重新生成工程文件：
+
+   ```bash
+   ./regen.sh
+   ```
+
+   工程文件 `Inspirations.xcodeproj` 由 `project.yml` 生成，不要直接手改。
+
+2. 用 Xcode 打开 `Inspirations.xcodeproj`，选择目标设备，Cmd+R 运行。
+
+3. 命令行构建：
+
+   ```bash
+   xcodebuild -project Inspirations.xcodeproj \
+       -scheme Inspirations \
+       -destination 'generic/platform=iOS Simulator' build
+   ```
+
+## 权限说明
+
+应用仅在使用相关功能时请求以下系统权限：
+
+| 权限 | 用途 |
+|------|------|
+| 麦克风 | 录入语音灵感（`NSMicrophoneUsageDescription`） |
+| 语音识别 | 将语音转换为文字（`NSSpeechRecognitionUsageDescription`） |
+| 照片库 | 选择图片附件（系统 PhotosPicker，无需额外配置） |
+
+## 数据与备份
+
+- 所有数据（文字、标签、图片）均存储在设备本地，不上传任何服务器。
+- 备份文件为自包含的 JSON（含 Base64 图片与校验和），可在「设置 → 备份」中导出为文件，或从文件导入。
+- 导入时可选「合并」（与现有数据按 UUID 去重合并）或「替换」（清空现有数据后导入）。
+- 注意：删除 App 会清除本地数据，请定期备份。
+
+## 版本
+
+**v1.0**（2026-11）
+初始版本：速记、标签、图片、语音转文字、备份、搜索。
